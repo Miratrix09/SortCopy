@@ -12,7 +12,7 @@
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
-BOOL g_bstop = FALSE;
+BOOL g_bstop = FALSE, g_bChangeCursor;
 typedef CListBox* PCListBox;
 // Диалоговое окно CAboutDlg используется для описания сведений о приложении
 
@@ -75,7 +75,7 @@ BEGIN_MESSAGE_MAP(CsortDlg, CDialogEx)
 	ON_CBN_SELCHANGE(IDC_COMBODEST, &CsortDlg::OnCbnSelchangeCombodest)
 	ON_BN_CLICKED(IDC_BUTTONSTOP, &CsortDlg::OnBnClickedButtonstop)
 	ON_MESSAGE(UM_REFRESH_LIST, &CsortDlg::OnRefreshList)
-//	ON_NOTIFY(NM_CUSTOMDRAW, IDC_PROGRESS1, &CsortDlg::OnNMCustomdrawProgress1)
+	ON_WM_SETCURSOR()
 END_MESSAGE_MAP()
 
 DWORD WINAPI ChangeThread(LPVOID lpParameter)
@@ -250,8 +250,8 @@ void CsortDlg::FindFile(CString &strPath, DWORD idList)
 	{
 		if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) continue;
 		pLBSource->AddString(fd.cFileName);
-		size = fd.nFileSizeLow >> 10;
-		pLBSource->SetItemData(n++, ++size);
+		size = 1 + (fd.nFileSizeLow >> 16);
+		pLBSource->SetItemData(n++, size);
 	}
 }
 
@@ -290,7 +290,7 @@ void CsortDlg::OnBnClickedButtonBrowse()
 		{
 			if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) continue;
 			pLBSource->AddString(fd.cFileName);
-			size = (fd.nFileSizeLow >> 10) + 1;
+			size = (fd.nFileSizeLow >> 16) + 1;
 			s += size;
 			pLBSource->SetItemData(n++, (DWORD_PTR)size);
 		}
@@ -314,6 +314,7 @@ DWORD WINAPI copyThread(LPVOID lpParameter)
 	strDest += L'\\';
 	int n = pLBSource->GetCount();
 	int prpos = 0;
+	
 	for (int i = 0, j = 0; i < n; i++)
 	{
 		if (!g_bstop)
@@ -336,9 +337,15 @@ DWORD WINAPI copyThread(LPVOID lpParameter)
 		}
 		else
 		{
+
 			g_bstop = FALSE;
 			break;
 		}
+	}
+	if (g_bChangeCursor)
+	{
+		pDlg->EndWaitCursor();
+		g_bChangeCursor = FALSE;
 	}
 	pProgress->ShowWindow(0);
 	pButtonStop->EnableWindow(0);
@@ -442,6 +449,8 @@ void CsortDlg::OnBnClickedButtonstop()
 	g_bstop = TRUE;
 	CButton* pButtonStop = (CButton*)GetDlgItem(IDC_BUTTONSTOP);
 	pButtonStop->EnableWindow(0);
+	g_bChangeCursor = TRUE;
+	BeginWaitCursor();
 }
 
 LRESULT CsortDlg::OnRefreshList(WPARAM wp,LPARAM lp)
@@ -450,3 +459,12 @@ LRESULT CsortDlg::OnRefreshList(WPARAM wp,LPARAM lp)
 	return 0;
 }
 
+BOOL CsortDlg::OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message)
+{
+	if (g_bChangeCursor)
+	{
+		RestoreWaitCursor();
+		return TRUE;
+	}
+	return CDialogEx::OnSetCursor(pWnd, nHitTest, message);
+}

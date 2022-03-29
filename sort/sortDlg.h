@@ -27,7 +27,6 @@ public:
 	HANDLE m_dwChangeHandles;
 
 protected:
-	static BOOL s_bstop;
 	HICON m_hIcon;
 
 	// Созданные функции схемы сообщений
@@ -46,4 +45,6 @@ public:
 	afx_msg void OnCbnSelchangeCombodest();
 	afx_msg void OnBnClickedButtonstop();
 	afx_msg LRESULT OnRefreshList(WPARAM, LPARAM);
+	afx_msg BOOL OnSetCursor(CWnd* pWnd, UINT nHitTest, UINT message);
+
 };
