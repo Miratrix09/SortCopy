@@ -136,6 +136,8 @@ void CsortDlg::ReadDrive()
 	if (n > 0)
 	{
 		pCBDest->SetCurSel(n - 1);
+		pCBDest->GetWindowTextW(strPath, 4);
+
 		if (m_dwChangeHandles)
 		{
 			FindCloseChangeNotification(m_dwChangeHandles);
@@ -146,12 +148,13 @@ void CsortDlg::ReadDrive()
 			strPath,                       // directory to watch 
 			FALSE,                         // do not watch subtree 
 			FILE_NOTIFY_CHANGE_FILE_NAME);
-		if (m_dwChangeHandles != INVALID_HANDLE_VALUE)
-			if (!CreateThread(0, 0, ChangeThread, this, 0, &copythreadID))
-			{
-				AfxMessageBox(L"Не могу создать поток", MB_ICONEXCLAMATION);
-				ExitProcess(GetLastError());
-			}
+		if (m_dwChangeHandles == INVALID_HANDLE_VALUE)
+			AfxMessageBox(L"Ошибка функции FindFirstChangeNotification");
+		else if (!CreateThread(0, 0, ChangeThread, this, 0, &copythreadID))
+		{
+			AfxMessageBox(L"Не могу создать поток", MB_ICONEXCLAMATION);
+			ExitProcess(GetLastError());
+		}
 		OnCbnSelchangeCombodest();
 	}
 }
