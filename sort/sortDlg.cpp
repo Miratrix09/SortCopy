@@ -119,7 +119,9 @@ void CsortDlg::ReadDrive()
 	DWORD copythreadID;
 	WCHAR strPath[4] = L"A:\\";
 	CComboBox* pCBDest = (CComboBox*)GetDlgItem(IDC_COMBODEST);
+	PCListBox pLBDest = (PCListBox)GetDlgItem(IDC_LISTDEST);
 	pCBDest->ResetContent();
+	pLBDest->ResetContent();
 	for (int x = 0; x < 26; x++) // проходимся циклом по битам
 	{
 		if ((dr >> x) & 1) // если единица - диск с номером x есть
